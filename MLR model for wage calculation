@@ -1,0 +1,71 @@
+
+##Import data
+setwd("D:/Dropbox/MIT/R")
+salTrain <- read.csv("test3.csv")
+summary(salTrain)
+
+##check data to see if there is a need to cleanse
+boxplot(salTrain$Salary, main = "Salary")
+hist(salTrain$Salary, main = "Salary")
+qqnorm(salTrain$Salary, main = "Salary")
+qqline(salTrain$Salary)
+
+##write remove outlier function
+remove_outliers <- function(x, na.rm=TRUE){
+  qnt <-quantile(x, probs = c(0.25,0.75), na.rm = na.rm)
+  H<- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y  
+}
+
+##Cleanse Salary, ommit outliers
+salTrain$SalaryC <- remove_outliers(salTrain$Salary)
+boxplot(salTrain$SalaryC, main = "Salary Cleansed")
+hist(salTrain$SalaryC, main = "Salary Cleansed")
+
+##convert companyId to factor
+salTrain$companyId<- factor(salTrain$companyId)
+summary(salTrain$companyId)
+is.factor(salTrain$companyId)
+
+##convert jobType to factor
+salTrain$jobType<- factor(salTrain$jobType)
+summary(salTrain$jobType)
+is.factor(salTrain$jobType)
+
+##convert degree to factor
+salTrain$degree<- factor(salTrain$degree)
+summary(salTrain$degree)
+is.factor(salTrain$degree)
+
+##convert major to factor
+salTrain$major<- factor(salTrain$major)
+summary(salTrain$major)
+is.factor(salTrain$major)
+
+##convert industry to factor
+salTrain$industry<- factor(salTrain$industry)
+summary(salTrain$industry)
+is.factor(salTrain$industry)
+summary(salTrain)
+
+##Construct model
+model1 <- lm(log(SalaryC) ~ yearsExperience + milesFromMetropolis + companyId + jobType + degree + major + industry, data = salTrain)
+summary(model1)
+
+##Import test_feature data
+salTest <- read.csv("test_features.csv")
+
+##Predict Salary using model1 and export to file
+salTest$testSalaryLog <- predict(model1, salTest)
+salTest$testSalary<-exp(salTest$testSalaryLog)
+summary(salTest$testSalary)
+write.table(salTest, "test_feature_complete3.csv", sep="\t")
+
+par(mfrow=c(2,2)) 
+plot(model1)
+#cov(yearsExperience,milesFromMetropolis)
+#pairs(salTrain)
+
